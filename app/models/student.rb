@@ -1,9 +1,31 @@
+class ValidatorClass < ActiveModel::Validator
+    def validation(record)
+        if record.first_name == "Tom Cruise"
+            record.errors.add :first_name, "can not be full name."
+        end
+    end 
+end
+
+
 class Student < ApplicationRecord
     has_many :blogs
     has_and_belongs_to_many :courses
     has_many :student_projects
     has_many :projects, through: :student_projects
-    validates :first_name, :last_name, :email, presence: true
+    validates :first_name, :last_name, :email, :date_of_birth, :address, :contact, presence: true
+
+    # validates :first_name, :last_name, :email, presence: true
+    validates :email, uniqueness: true
+    validates :first_name, :last_name, length: {in: (3..25)}
+    validates :first_name, :last_name, format: { with: /\A[a-zA-Z]+\z/, message: "Only letters are allowed"}
+    
+    class Student
+    include ActiveModel::Validations
+    validates_with ValidatorClass
+    end
+    validates_each :first_name do |record, attr, value|
+        record.errors.add(attr,'must start with upper case') if value =~/\A[[:lower]]/
+    end
 
     before_validation :login_check
     after_validation :add_last_name
